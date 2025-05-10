@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ public class FoodChainManager : MonoBehaviour
     public List<SpeciesManager> speciesList = new List<SpeciesManager>();
 
     public float[][] speciesAdjacencyMatrix;
+
+    public List<SpeciesManager> rootSpeciesList = new List<SpeciesManager>(); // roots of the food chain
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -20,6 +23,9 @@ public class FoodChainManager : MonoBehaviour
             }
             print(column);
         }
+
+        AssignRootAnimal();
+        StartFoodChain();
     }
 
     // Update is called once per frame
@@ -33,6 +39,7 @@ public class FoodChainManager : MonoBehaviour
         speciesAdjacencyMatrix = new float[speciesList.Count][];
         for (int i = 0; i < speciesList.Count; i++) {
             speciesAdjacencyMatrix[i] = new float[speciesList.Count];
+            
             for (int j = 0; j < speciesList.Count; j++) {
                 if (j == i) { // species can't eat themselves. Cannibalism bad :(((
                     print("dont eat yourself");
@@ -68,8 +75,31 @@ public class FoodChainManager : MonoBehaviour
                     continue;
                 }
                 print("yay scran time! Here's your stats dumbass: " + (float)speciesList[i].animalData.foodProduced / (float)speciesList[j].animalData.foodConsumed);
-                speciesAdjacencyMatrix[i][j] = (float)speciesList[i].animalData.foodProduced / (float)speciesList[j].animalData.foodConsumed; // prey saturation : predator hunger
+                speciesAdjacencyMatrix[i][j] = (float)currentPrey.animalData.foodProduced / (float)currentPredator.animalData.foodConsumed; // prey saturation : predator hunger
+
+                currentPrey.predatorList.Add(currentPredator);
             }
+        }
+    }
+
+    void AssignRootAnimal() {
+        for (int i = 0; i < speciesList.Count; i++) {
+            for (int j = 0; j < speciesList.Count; j++) {
+                if (speciesAdjacencyMatrix[i][j] == 0) {
+                    goto Found;
+                }           
+                rootSpeciesList.Add(speciesList[i]); // bro is a root in the food chain, so get 'im in there
+            }
+        Found: 
+            continue;
+        }
+    }
+
+    public void StartFoodChain() {
+        foreach (SpeciesManager root in rootSpeciesList) {
+            print("got " + root.animalData.name + " to send out fo som food");
+
+            root.CheckIfSatiated();
         }
     }
 }
